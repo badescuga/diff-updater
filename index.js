@@ -20,8 +20,8 @@ loadData('/lpc-versions/lpc-new2.js').then((data) => {
     lpcNew = data.toString();
     loadData('/lpc-versions/lpc-old2.js').then((data) => {
         lpcOld = data.toString();
-        console.log(lpcNew.length);
-        console.log(lpcOld.length);
+        console.log("old card size: " + lpcOld.length);
+        console.log("new card size: " + lpcNew.length);
         getDiffs();
     }).catch(ex => {
         console.log(ex);
@@ -31,11 +31,28 @@ loadData('/lpc-versions/lpc-new2.js').then((data) => {
 });
 
 function getDiffs() {
-    var diff = jsdiff.diffChars(lpcNew, lpcOld);
+    console.log();
+    console.log("--- diff by char ------");
+    console.log("----------------------------");
+    var diff = jsdiff.diffChars(lpcOld, lpcNew);
     var result = JSON.stringify(diff);
-    console.log(result.length);
-    // console.log(result);
+    console.log("patch size: " + result.length);
+    displayDiffs(diff);
 
+    console.log();
+    console.log("--- diff by word ------");
+    console.log("----------------------------");
+    diff = jsdiff.diffWords(lpcOld, lpcNew);
+    result = JSON.stringify(diff);
+    console.log("patch size: " + result.length);
+    displayDiffs(diff);
+    
+    console.log();
+    console.log("----------------------------");
+    console.log("----------------------------");
+}
+
+function displayDiffs(diff) {
     diff.forEach(function (part) {
         // green for additions, red for deletions
         // grey for common parts
