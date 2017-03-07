@@ -1,0 +1,13 @@
+{
+  "name": "diff-updater",
+  "version": "0.0.0",
+  "description": "diff-updater",
+  "main": "app.js",
+  "author": "Alex Badescu",
+  "private": true,
+  "license": "BSD",
+"dependencies": {
+  "diff": "*",
+  "colors": "*"
+}
+}
