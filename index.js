@@ -22,7 +22,7 @@ loadData('/lpc-versions/lpc-new2.js').then((data) => {
         lpcOld = data.toString();
         console.log("old card size: " + lpcOld.length);
         console.log("new card size: " + lpcNew.length);
-        getDiffs();
+        getDiffs2();
     }).catch(ex => {
         console.log(ex);
     });
@@ -50,6 +50,23 @@ function getDiffs() {
     console.log();
     console.log("----------------------------");
     console.log("----------------------------");
+
+    console.log(result);
+}
+
+function getDiffs2() {
+    console.log();
+    console.log("--- diff by patch ------");
+    console.log("----------------------------");
+    var diff = jsdiff.createPatch("lpc-patch", lpcOld ,lpcNew, "old-header","new-header");
+    var result = JSON.stringify(diff);
+    console.log("patch size: " + result.length);
+    
+    console.log();
+    console.log("----------------------------");
+    console.log("----------------------------");
+
+    console.log(result);
 }
 
 function displayDiffs(diff) {
