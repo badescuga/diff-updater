@@ -31,7 +31,7 @@ loadData('/lpc-versions/lpc-new.js').then((data) => {
 });
 
 function getDiffs() {
-    var diff = jsdiff.diffChars(lpcNew.toString(), lpcOld.toString());
+    var diff = jsdiff.diffChars(lpcNew, lpcOld);
     var result = JSON.stringify(diff);
     console.log(result.length);
     console.log(result);
