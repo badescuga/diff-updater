@@ -1,12 +1,15 @@
 var jsdiff = require('diff');
 require('colors')
+var beautify = require('js-beautify').js_beautify;
 var fs = require('fs');
 
 var lpcNew = '';
 var lpcOld = '';
 
-var newLpcName = "/lpc-versions/lpc-new40.js";
-var oldLpcName = "/lpc-versions/lpc-old40.js";
+var newLpcName = "/lpc-versions/lpc-new.js";
+var oldLpcName = "/lpc-versions/lpc-old.js";
+
+var indent = 0;
 
 function loadData(path) {
     return new Promise((resolve, reject) => {
@@ -20,9 +23,9 @@ function loadData(path) {
 }
 
 loadData(newLpcName).then((data) => {
-    lpcNew = data.toString();
+    lpcNew = beautify(data.toString(), { indent_size: indent });
     loadData(oldLpcName).then((data) => {
-        lpcOld = data.toString();
+        lpcOld = beautify(data.toString(), { indent_size: indent });
         console.log("old card size: " + lpcOld.length);
         console.log("new card size: " + lpcNew.length);
         getDiffs();
@@ -35,45 +38,21 @@ loadData(newLpcName).then((data) => {
 
 function getDiffs() {
     console.log();
-    // console.log("--- diff by char ------");
+    // console.log("--- diff by patch ------");
     // console.log("----------------------------");
-    // var diff = jsdiff.diffChars(lpcOld, lpcNew);
+    // var diff = jsdiff.createPatch("lpc-patch", lpcOld, lpcNew, "old-header", "new-header");
     // var result = JSON.stringify(diff);
     // console.log("patch size: " + result.length);
-    // displayDiffs(diff);
 
     console.log();
-    console.log("--- diff by word ------");
+    console.log("--- diff by lines ------");
     console.log("----------------------------");
-    diff = jsdiff.diffWords(lpcOld, lpcNew);
-    result = JSON.stringify(diff);
+    var diff = jsdiff.diffLines(lpcOld, lpcNew);
+    var result = JSON.stringify(diff);
     console.log("patch size: " + result.length);
-    displayDiffs(diff);
-
-    console.log();
-    console.log("----------------------------");
-    console.log("----------------------------");
-    console.log("-----------compacted array------------");
-    console.log("----------------------------");
-    var array = compactDiff(diff);
-    result = JSON.stringify(array);
-    console.log("patch size: " + result.length);
-    console.log("----------------------------");
-    console.log("----------------------------");
 
     console.log(result);
 }
-
-// function getDiffs2() {
-//     console.log();
-//     console.log("--- diff by patch ------");
-//     console.log("----------------------------");
-//     var diff = jsdiff.createPatch("lpc-patch", lpcOld, lpcNew, "old-header", "new-header");
-//     var result = JSON.stringify(diff);
-//     console.log("patch size: " + result.length);
-
-//     console.log(result);
-// }
 
 function compactDiff(diff) {
     var array = [];
