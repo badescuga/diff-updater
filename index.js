@@ -16,9 +16,9 @@ function loadData(path) {
     });
 }
 
-loadData('/lpc-versions/lpc-new2.js').then((data) => {
+loadData('/lpc-versions/lpc-new.js').then((data) => {
     lpcNew = data.toString();
-    loadData('/lpc-versions/lpc-old2.js').then((data) => {
+    loadData('/lpc-versions/lpc-old.js').then((data) => {
         lpcOld = data.toString();
         console.log("old card size: " + lpcOld.length);
         console.log("new card size: " + lpcNew.length);
@@ -32,12 +32,12 @@ loadData('/lpc-versions/lpc-new2.js').then((data) => {
 
 function getDiffs() {
     console.log();
-    console.log("--- diff by char ------");
-    console.log("----------------------------");
-    var diff = jsdiff.diffChars(lpcOld, lpcNew);
-    var result = JSON.stringify(diff);
-    console.log("patch size: " + result.length);
-    displayDiffs(diff);
+    // console.log("--- diff by char ------");
+    // console.log("----------------------------");
+    // var diff = jsdiff.diffChars(lpcOld, lpcNew);
+    // var result = JSON.stringify(diff);
+    // console.log("patch size: " + result.length);
+    // displayDiffs(diff);
 
     console.log();
     console.log("--- diff by word ------");
