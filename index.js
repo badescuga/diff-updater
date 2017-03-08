@@ -80,7 +80,7 @@ function compactDiff(diff) {
         var newPart = {};
         if (!part.removed) {
             if (part.added) {
-                newPart.v = part.value;
+                newPart.a = part.value;
             } else {
                 newPart.n = part.value.length; // let me know how many chars everything is not changed
             }
