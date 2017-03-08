@@ -22,7 +22,7 @@ loadData('/lpc-versions/lpc-new2.js').then((data) => {
         lpcOld = data.toString();
         console.log("old card size: " + lpcOld.length);
         console.log("new card size: " + lpcNew.length);
-        getDiffs2();
+        getDiffs();
     }).catch(ex => {
         console.log(ex);
     });
@@ -46,8 +46,15 @@ function getDiffs() {
     result = JSON.stringify(diff);
     console.log("patch size: " + result.length);
     displayDiffs(diff);
-    
+
     console.log();
+    console.log("----------------------------");
+    console.log("----------------------------");
+    console.log("-----------compacted array------------");
+    console.log("----------------------------");
+    var array = compactDiff(diff);
+    result = JSON.stringify(array);
+    console.log("patch size: " + result.length);
     console.log("----------------------------");
     console.log("----------------------------");
 
@@ -58,15 +65,32 @@ function getDiffs2() {
     console.log();
     console.log("--- diff by patch ------");
     console.log("----------------------------");
-    var diff = jsdiff.createPatch("lpc-patch", lpcOld ,lpcNew, "old-header","new-header");
+    var diff = jsdiff.createPatch("lpc-patch", lpcOld, lpcNew, "old-header", "new-header");
     var result = JSON.stringify(diff);
     console.log("patch size: " + result.length);
-    
-    console.log();
-    console.log("----------------------------");
-    console.log("----------------------------");
 
     console.log(result);
+}
+
+function compactDiff(diff) {
+    var array = [];
+    diff.forEach(function (part) {
+        // green for additions, red for deletions
+        // grey for common parts
+        var newPart = {};
+        if (!part.removed) {
+            if (part.added) {
+                newPart.v = part.value;
+            } else {
+                newPart.n = part.value.length; // let me know how many chars everything is not changed
+            }
+        } else {
+            newPart.r = part.count;
+        }
+        array.push(newPart);
+    });
+
+    return array;
 }
 
 function displayDiffs(diff) {
