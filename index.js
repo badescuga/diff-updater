@@ -16,9 +16,9 @@ function loadData(path) {
     });
 }
 
-loadData('/lpc-versions/lpc-new.js').then((data) => {
+loadData('/lpc-versions/lpc-new40.js').then((data) => {
     lpcNew = data.toString();
-    loadData('/lpc-versions/lpc-old.js').then((data) => {
+    loadData('/lpc-versions/lpc-old40.js').then((data) => {
         lpcOld = data.toString();
         console.log("old card size: " + lpcOld.length);
         console.log("new card size: " + lpcNew.length);
@@ -61,16 +61,16 @@ function getDiffs() {
     console.log(result);
 }
 
-function getDiffs2() {
-    console.log();
-    console.log("--- diff by patch ------");
-    console.log("----------------------------");
-    var diff = jsdiff.createPatch("lpc-patch", lpcOld, lpcNew, "old-header", "new-header");
-    var result = JSON.stringify(diff);
-    console.log("patch size: " + result.length);
+// function getDiffs2() {
+//     console.log();
+//     console.log("--- diff by patch ------");
+//     console.log("----------------------------");
+//     var diff = jsdiff.createPatch("lpc-patch", lpcOld, lpcNew, "old-header", "new-header");
+//     var result = JSON.stringify(diff);
+//     console.log("patch size: " + result.length);
 
-    console.log(result);
-}
+//     console.log(result);
+// }
 
 function compactDiff(diff) {
     var array = [];
