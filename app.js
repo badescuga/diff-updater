@@ -1,11 +1,12 @@
 var fs = require('fs');
 var checksum = require('checksum');
+require('colors')
 
 var lpcNew = '';
 var lpcOld = '';
 
-var newLpcName = "/lpc-versions/lpc-new80.js";
-var oldLpcName = "/lpc-versions/lpc-old80.js";
+var newLpcName = "/lpc-versions/lpc-new20.js";
+var oldLpcName = "/lpc-versions/lpc-old20.js";
 
 var indent = 0;
 
@@ -38,7 +39,7 @@ function getDiffs() {
     console.log();
     console.log("--- diff ------");
     console.log("----------------------------");
-    
+
     var diff = createPatch(lpcOld, lpcNew);
     var result = JSON.stringify(diff);
     console.log("patch size: " + result.length);
@@ -46,8 +47,8 @@ function getDiffs() {
     console.log("new string size: " + lpcNew.length);
     var patchedOldString = applyPatch(lpcOld, diff);
     console.log("old string + patch size: " + patchedOldString.length);
-    console.log("are the 2 eq? " + (checksum(patchedOldString)===checksum(lpcNew)));
-
+    console.log("are the 2 eq? " + (checksum(patchedOldString) === checksum(lpcNew)));
+    colorifyPatch(lpcOld, diff);
     //console.log(result);
 }
 
@@ -127,19 +128,38 @@ function smallifyPatch(array) {
 function applyPatch(oldString, patch) {
     var i = 0;
     var newString = "";
-    while(i<oldString.length) {
+    while (i < oldString.length) {
         patch.forEach(item => {
-            if(item.a != null) {
+            if (item.a != null) {
                 newString += item.a;
-            } else if(item.c != null) {
-                newString += oldString.substring(i,i+item.c);
-                i+=item.c;
-            } else if(item.r != null) {
-                i+=item.r;
+            } else if (item.c != null) {
+                newString += oldString.substring(i, i + item.c);
+                i += item.c;
+            } else if (item.r != null) {
+                i += item.r;
             }
         });
 
         return newString;
+    }
+}
+
+function colorifyPatch(oldString, patch) {
+    var i = 0;
+    while (i < oldString.length) {
+        patch.forEach(item => {
+            if (item.a != null) {
+                process.stderr.write(item.a.green);
+            } else if (item.c != null) {
+                var newstring = oldString.substring(i, i + item.c);
+                i += item.c;
+                process.stderr.write(newstring.grey);
+            } else if (item.r != null) {
+                var toRemove = oldString.substring(i, i + item.r);
+                process.stderr.write(toRemove.red);
+                i += item.r;
+            }
+        });
     }
 }
 
