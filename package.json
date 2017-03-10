@@ -9,6 +9,7 @@
 "dependencies": {
   "diff": "*",
   "colors": "*",
-  "js-beautify": "*"
+  "js-beautify": "*",
+  "checksum": "*"
 }
 }

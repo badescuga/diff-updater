@@ -1,4 +1,5 @@
 var fs = require('fs');
+var checksum = require('checksum');
 
 var lpcNew = '';
 var lpcOld = '';
@@ -37,11 +38,17 @@ function getDiffs() {
     console.log();
     console.log("--- diff ------");
     console.log("----------------------------");
+    
     var diff = createPatch(lpcOld, lpcNew);
     var result = JSON.stringify(diff);
     console.log("patch size: " + result.length);
+    console.log("applying patch..");
+    console.log("new string size: " + lpcNew.length);
+    var patchedOldString = applyPatch(lpcOld, diff);
+    console.log("old string + patch size: " + patchedOldString.length);
+    console.log("are the 2 eq? " + (checksum(patchedOldString)===checksum(lpcNew)));
 
-    console.log(result);
+    //console.log(result);
 }
 
 function createPatch(oldString, newString) {
@@ -64,7 +71,7 @@ function createPatch(oldString, newString) {
                 firstFindInNewStringIndex = newString.length;
             }
 
-            var maxValue = Math.min(oldString.length - iOld,firstFindInNewStringIndex - iNew);
+            var maxValue = Math.min(oldString.length - iOld, firstFindInNewStringIndex - iNew);
             foundSmallerDiff = false;
             var minIndexInOldString = Number.MAX_VALUE;;
             for (var i = 0; i < maxValue; i++) {
@@ -98,8 +105,43 @@ function createPatch(oldString, newString) {
         patch.push({ a: newString.substring(iNew) });
     }
 
+    // return smallifyPatch(patch);
     return patch;
 }
 
-console.log(JSON.stringify(createPatch("ab22atttb","abzbcabttt2")));
-console.log(JSON.stringify(createPatch("allbczppzq2","alblczppz24q2ab")));
+function smallifyPatch(array) {
+    var compactText = "";
+    array.forEach(item => {
+        if (item.a != null) {
+            compactText += "a" + item.a + ",";
+        } else if (item.c != null) {
+            compactText += "c" + item.c + ",";
+        } else if (item.r != null) {
+            compactText += "r" + item.r + ",";
+        }
+    });
+
+    return compactText;
+}
+
+function applyPatch(oldString, patch) {
+    var i = 0;
+    var newString = "";
+    while(i<oldString.length) {
+        patch.forEach(item => {
+            if(item.a != null) {
+                newString += item.a;
+            } else if(item.c != null) {
+                newString += oldString.substring(i,i+item.c);
+                i+=item.c;
+            } else if(item.r != null) {
+                i+=item.r;
+            }
+        });
+
+        return newString;
+    }
+}
+
+console.log(JSON.stringify(createPatch("ab22atttb", "abzbcabttt2")));
+console.log(JSON.stringify(createPatch("allbczppzq2", "alblczppz24q2ab")));
