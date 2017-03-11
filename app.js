@@ -32,7 +32,8 @@ loadData(newLpcName).then((data) => {
 
         console.log("old card size: " + lpcOld.length);
         console.log("new card size: " + lpcNew.length);
-        getDiffs();
+        //getDiffs();
+        calculateWordWeight(lpcNew);
     }).catch(ex => {
         console.log(ex);
     });
@@ -55,6 +56,70 @@ function getDiffs() {
     console.log("are the 2 eq? " + (checksum(patchedOldString) === checksum(lpcNew)));
     colorifyPatch(lpcOld, diff);
     //console.log(result);
+    calculateWordWeight(lpcNew);
+}
+
+function calculateWordWeight(str) {
+    console.log("------------->>>> analizying word usage");
+    var arrayOfWords = lpcNew.split(/\W+/);
+    var dictionary = {};
+    for (var i = 0; i < arrayOfWords.length; i++) {
+        dictionary[arrayOfWords[i]] = 0;
+    }
+    arrayOfWords.forEach(element => {
+        dictionary[element]++;
+    });
+
+    var keyArray = Object.keys(dictionary);
+    keyArray.sort((a, b) => {
+        if (a.length <= 2) {
+            return -1;
+        }
+
+        if (b.length - 2 <= 2) {
+            return 1;
+        }
+
+        if ((a.length - 2) * dictionary[a] < (b.length - 2) * dictionary[b]) {
+            return -1;
+        }
+
+        return 1;
+    })
+
+    var totalSaved = 0;
+    keyArray.forEach(elem => {
+        if(elem.length <= 2) {
+            return;
+        }
+
+        var saved = calculateRealSave(elem,dictionary[elem]);
+        if(saved > 0) {
+        totalSaved += saved;
+        console.log(`for word >>> ${elem} >>> count: ${dictionary[elem]} >>> value (2char replacement): ${calculateRealSave(elem,dictionary[elem])};`);
+    } else {
+        console.log(`[SKIPPING] word >>> ${elem} >>> count: ${dictionary[elem]} >>> value (2char replacement): ${calculateRealSave(elem,dictionary[elem])};`);
+    }
+});
+
+    console.log("------------------->>>>>>>>>>");
+    console.log(`------------------->>>>>>>>>> total saved: ${totalSaved/1000} Kb`);
+
+    /*
+    console.log("------->>> see 2 letter words, see value if replaced with one char------");
+
+  keyArray.forEach(elem => {
+        if(elem.length != 2) {
+            return;
+        }
+
+        console.log(`for word >>> ${elem} >>> value: ${(elem.length - 1) * dictionary[elem]}`);
+    });
+    */
+}
+
+function calculateRealSave(element, count) {
+    return (element.length - 2) * count - element.length - 5 - 2; 
 }
 
 function createPatch(oldString, newString) {
