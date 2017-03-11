@@ -1,12 +1,16 @@
 var fs = require('fs');
 var checksum = require('checksum');
-require('colors')
+require('colors');
+var beautify = require('js-beautify').js_beautify;
 
 var lpcNew = '';
 var lpcOld = '';
 
-var newLpcName = "/lpc-versions/lpc-new20.js";
-var oldLpcName = "/lpc-versions/lpc-old20.js";
+//var newLpcName = "/lpc-versions/lpc-new200.js";
+//var oldLpcName = "/lpc-versions/lpc-old200.js";
+
+var newLpcName = '/lpc-versions/lpc-30-02.js';
+var oldLpcName = '/lpc-versions/lpc-23-02.js';
 
 var indent = 0;
 
@@ -25,6 +29,7 @@ loadData(newLpcName).then((data) => {
     lpcNew = data.toString();
     loadData(oldLpcName).then((data) => {
         lpcOld = data.toString();
+
         console.log("old card size: " + lpcOld.length);
         console.log("new card size: " + lpcNew.length);
         getDiffs();
