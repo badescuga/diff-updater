@@ -107,14 +107,26 @@ function createPatch(oldString, newString, substringSize = 1) {
     var t0 = present();
     var proccessDictionary = {};
     var currentMilestion = 1;
+    var currentMinute = 1;
     var patch = [];
     var iOld = 0, iNew = 0;
     var countTheSame = 0;
+    var originalOldSize = oldString.length;
     while (iOld < oldString.length && iNew < newString.length) {
-        if (iOld > currentMilestion * oldString.length / 10 && proccessDictionary[currentMilestion.toString()] === undefined) {
+        // if (iOld > currentMilestion * oldString.length / 10 && proccessDictionary[currentMilestion.toString()] === undefined) {
+        //     proccessDictionary[currentMilestion.toString()] = 1;
+        //     console.log(`-> ${currentMilestion * 10}% completed; patch size: ${JSON.stringify(patch).length / 1000} kb; time: ${(present() - t0) / 1000} s`);
+        //     currentMilestion++;
+        // }
+        if (originalOldSize - oldString.length > currentMilestion * originalOldSize / 20 && proccessDictionary[currentMilestion.toString()] === undefined) {
             proccessDictionary[currentMilestion.toString()] = 1;
-            console.log(`-> ${currentMilestion * 10}% completed; patch size: ${JSON.stringify(patch).length / 1000} kb; time: ${(present() - t0) / 1000} s`);
+            console.log(`-------> ${currentMilestion * 5}% completed; patch size: ${JSON.stringify(patch).length / 1000} kb; minimized patch size: ${smallifyPatch(patch).length / 1000} kb; time: ${(present() - t0) / 60000} minutes`);
             currentMilestion++;
+        }
+
+        if ((present() - t0) / 60000 > currentMinute) {
+            console.log(`-> time passed ${currentMinute} minutes; ${Math.floor((originalOldSize - oldString.length) * 100 / originalOldSize)}% completed; patch size: ${JSON.stringify(patch).length / 1000} kb; minimized patch size: ${smallifyPatch(patch).length / 1000} kb;`);
+            currentMinute++;
         }
 
         if (oldString[iOld] === newString[iNew]) {
@@ -125,7 +137,17 @@ function createPatch(oldString, newString, substringSize = 1) {
             if (countTheSame != 0) {
                 patch.push({ c: countTheSame });
                 countTheSame = 0;
+                if (iNew > 1000) {
+                    newString = newString.substring(iNew, newString.length);
+                    iNew = 0;
+                }
+
+                if (iOld > 1000) {
+                    oldString = oldString.substring(iOld, oldString.length);
+                    iOld = 0;
+                }
             }
+
             var stringToSearchFor = iOld === oldString.length - substringSize + 1 ? oldString[iOld] : oldString.substring(iOld, iOld + substringSize);
             var firstFindInNewStringIndex = newString.indexOf(stringToSearchFor, iNew);
             if (firstFindInNewStringIndex === -1) {
@@ -147,9 +169,17 @@ function createPatch(oldString, newString, substringSize = 1) {
             if (foundSmallerDiff === false) {
                 patch.push({ a: newString.substring(iNew, firstFindInNewStringIndex) });
                 iNew = firstFindInNewStringIndex;
+                if (iNew > 1000) {
+                    newString = newString.substring(firstFindInNewStringIndex, newString.length);
+                    iNew = 0;
+                }
             } else {
                 patch.push({ r: minIndexInOldString - iOld });
                 iOld = minIndexInOldString;
+                if (iOld > 1000) {
+                    oldString = oldString.substring(minIndexInOldString, oldString.length);
+                    iOld = 0;
+                }
             }
         }
     }
@@ -247,7 +277,7 @@ function patchProcess(oldString, newString) {
     }
 
     console.log("----------------------------");
-    console.log("minified patch size: " + smallifyPatch(diff));
+    console.log("minified patch size: " + smallifyPatch(diff).length);
     console.log("----------------------------");
     console.log();
 }

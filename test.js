@@ -20,7 +20,7 @@ loadData(newLpcName).then(text => {
     var toSearchFor = "PERSONA_CARD_TEMPLATE_READY";
     var index = text.indexOf(toSearchFor);
     var t0 = present();
-    text.indexOf(toSearchFor, index);
+    text.indexOf(toSearchFor, index - 1);
     console.log("time: " + (present() - t0));
     t0 = present();
     toSearchFor.indexOf(toSearchFor, 0);
