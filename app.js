@@ -2,17 +2,24 @@ var fs = require('fs');
 var checksum = require('checksum');
 require('colors');
 var beautify = require('js-beautify').js_beautify;
+var present = require('present');
 
 var lpcNew = '';
 var lpcOld = '';
 
-//var newLpcName = "/lpc-versions/lpc-new200.js";
-//var oldLpcName = "/lpc-versions/lpc-old200.js";
+var newLpcName = "/lpc-versions/lpc-new20.js";
+var oldLpcName = "/lpc-versions/lpc-old20.js";
 
-var newLpcName = '/lpc-versions/lpc-30-02.js';
-var oldLpcName = '/lpc-versions/lpc-23-02.js';
+// var newLpcName = '/lpc-versions/lpc-30-02.js';
+// var oldLpcName = '/lpc-versions/lpc-23-02.js';
 
 var indent = 0;
+
+//console.log(JSON.stringify(createPatch("ab22atttb", "abzbcabttt2")));
+//console.log(JSON.stringify(createPatch("allbczppzq2", "alblczppz24q2ab")));
+
+patchProcess("ab22atttb", "abzbcabttt2");
+patchProcess("allbczppzq2", "alblczppz24q2ab");
 
 function loadData(path) {
     return new Promise((resolve, reject) => {
@@ -32,8 +39,8 @@ loadData(newLpcName).then((data) => {
 
         console.log("old card size: " + lpcOld.length);
         console.log("new card size: " + lpcNew.length);
-        //getDiffs();
-        calculateWordWeight(lpcNew);
+        getDiffs();
+        //calculateWordWeight(lpcNew);
     }).catch(ex => {
         console.log(ex);
     });
@@ -42,21 +49,7 @@ loadData(newLpcName).then((data) => {
 });
 
 function getDiffs() {
-    console.log();
-    console.log("--- diff ------");
-    console.log("----------------------------");
-
-    var diff = createPatch(lpcOld, lpcNew);
-    var result = JSON.stringify(diff);
-    console.log("patch size: " + result.length);
-    console.log("applying patch..");
-    console.log("new string size: " + lpcNew.length);
-    var patchedOldString = applyPatch(lpcOld, diff);
-    console.log("old string + patch size: " + patchedOldString.length);
-    console.log("are the 2 eq? " + (checksum(patchedOldString) === checksum(lpcNew)));
-    colorifyPatch(lpcOld, diff);
-    //console.log(result);
-    calculateWordWeight(lpcNew);
+    patchProcess(lpcOld, lpcNew);
 }
 
 function calculateWordWeight(str) {
@@ -89,44 +82,41 @@ function calculateWordWeight(str) {
 
     var totalSaved = 0;
     keyArray.forEach(elem => {
-        if(elem.length <= 2) {
+        if (elem.length <= 2) {
             return;
         }
 
-        var saved = calculateRealSave(elem,dictionary[elem]);
-        if(saved > 0) {
-        totalSaved += saved;
-        console.log(`for word >>> ${elem} >>> count: ${dictionary[elem]} >>> value (2char replacement): ${calculateRealSave(elem,dictionary[elem])};`);
-    } else {
-        console.log(`[SKIPPING] word >>> ${elem} >>> count: ${dictionary[elem]} >>> value (2char replacement): ${calculateRealSave(elem,dictionary[elem])};`);
-    }
-});
+        var saved = calculateRealSave(elem, dictionary[elem]);
+        if (saved > 0) {
+            totalSaved += saved;
+            console.log(`for word >>> ${elem} >>> count: ${dictionary[elem]} >>> value (2char replacement): ${calculateRealSave(elem, dictionary[elem])};`);
+        } else {
+            console.log(`[SKIPPING] word >>> ${elem} >>> count: ${dictionary[elem]} >>> value (2char replacement): ${calculateRealSave(elem, dictionary[elem])};`);
+        }
+    });
 
     console.log("------------------->>>>>>>>>>");
-    console.log(`------------------->>>>>>>>>> total saved: ${totalSaved/1000} Kb`);
-
-    /*
-    console.log("------->>> see 2 letter words, see value if replaced with one char------");
-
-  keyArray.forEach(elem => {
-        if(elem.length != 2) {
-            return;
-        }
-
-        console.log(`for word >>> ${elem} >>> value: ${(elem.length - 1) * dictionary[elem]}`);
-    });
-    */
+    console.log(`------------------->>>>>>>>>> total saved: ${totalSaved / 1000} Kb`);
 }
 
 function calculateRealSave(element, count) {
-    return (element.length - 2) * count - element.length - 5 - 2; 
+    return (element.length - 2) * count - element.length - 5 - 2;
 }
 
-function createPatch(oldString, newString) {
+function createPatch(oldString, newString, substringSize = 1) {
+    var t0 = present();
+    var proccessDictionary = {};
+    var currentMilestion = 1;
     var patch = [];
     var iOld = 0, iNew = 0;
     var countTheSame = 0;
     while (iOld < oldString.length && iNew < newString.length) {
+        if (iOld > currentMilestion * oldString.length / 10 && proccessDictionary[currentMilestion.toString()] === undefined) {
+            proccessDictionary[currentMilestion.toString()] = 1;
+            console.log(`-> ${currentMilestion * 10}% completed; patch size: ${JSON.stringify(patch).length / 1000} kb; time: ${(present() - t0) / 1000} s`);
+            currentMilestion++;
+        }
+
         if (oldString[iOld] === newString[iNew]) {
             countTheSame++;
             iOld++;
@@ -136,18 +126,18 @@ function createPatch(oldString, newString) {
                 patch.push({ c: countTheSame });
                 countTheSame = 0;
             }
-
-            var firstFindInNewStringIndex = newString.indexOf(oldString[iOld], iNew);
+            var stringToSearchFor = iOld === oldString.length - substringSize + 1 ? oldString[iOld] : oldString.substring(iOld, iOld + substringSize);
+            var firstFindInNewStringIndex = newString.indexOf(stringToSearchFor, iNew);
             if (firstFindInNewStringIndex === -1) {
                 firstFindInNewStringIndex = newString.length;
             }
 
             var maxValue = Math.min(oldString.length - iOld, firstFindInNewStringIndex - iNew);
             foundSmallerDiff = false;
-            var minIndexInOldString = Number.MAX_VALUE;;
+            var minIndexInOldString = Number.MAX_VALUE;
             for (var i = 0; i < maxValue; i++) {
-                var c = newString[i + iNew];
-                var newIndex = oldString.indexOf(c, iOld);
+                stringToSearchFor = i + iNew === newString.length - substringSize + 1 ? newString[i + iNew] : newString.substring(i + iNew, i + iNew + substringSize);
+                var newIndex = oldString.indexOf(stringToSearchFor, iOld);
                 if (newIndex !== -1 && newIndex - iOld < firstFindInNewStringIndex - iNew) {
                     minIndexInOldString = Math.min(newIndex, minIndexInOldString);
                     foundSmallerDiff = true;
@@ -176,13 +166,15 @@ function createPatch(oldString, newString) {
         patch.push({ a: newString.substring(iNew) });
     }
 
+    var t1 = present();
+    console.log(`--- time spent in patch: ${(t1 - t0) / 1000} seconds`);
     // return smallifyPatch(patch);
     return patch;
 }
 
-function smallifyPatch(array) {
+function smallifyPatch(patch) {
     var compactText = "";
-    array.forEach(item => {
+    patch.forEach(item => {
         if (item.a != null) {
             compactText += "a" + item.a + ",";
         } else if (item.c != null) {
@@ -233,5 +225,29 @@ function colorifyPatch(oldString, patch) {
     }
 }
 
-console.log(JSON.stringify(createPatch("ab22atttb", "abzbcabttt2")));
-console.log(JSON.stringify(createPatch("allbczppzq2", "alblczppz24q2ab")));
+function patchProcess(oldString, newString) {
+    console.log();
+    console.log("--- diff ------");
+    console.log("----------------------------");
+
+    var diff = createPatch(oldString, newString, 3);
+    var result = JSON.stringify(diff);
+    console.log("patch size: " + result.length);
+    console.log("applying patch..");
+    console.log("new string size: " + newString.length);
+    var patchedOldString = applyPatch(oldString, diff);
+    console.log("old string + patch size: " + patchedOldString.length);
+    console.log("are the 2 eq? " + (checksum(patchedOldString) === checksum(newString)));
+    colorifyPatch(oldString, diff);
+    console.log();
+    if (result.length > 1000) {
+        console.log("--- the patch is too long to show; hiding the patch");
+    } else {
+        console.log(result);
+    }
+
+    console.log("----------------------------");
+    console.log("minified patch size: " + smallifyPatch(diff));
+    console.log("----------------------------");
+    console.log();
+}
