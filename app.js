@@ -163,11 +163,6 @@ function createPatch(oldString, newString, substringSize = 1) {
     var countTheSame = 0;
     var originalOldSize = oldString.length;
     while (iOld < oldString.length && iNew < newString.length) {
-        // if (iOld > currentMilestion * oldString.length / 10 && proccessDictionary[currentMilestion.toString()] === undefined) {
-        //     proccessDictionary[currentMilestion.toString()] = 1;
-        //     console.log(`-> ${currentMilestion * 10}% completed; patch size: ${JSON.stringify(patch).length / 1000} kb; time: ${(present() - t0) / 1000} s`);
-        //     currentMilestion++;
-        // }
         if (originalOldSize - oldString.length > currentMilestion * originalOldSize / 20 && proccessDictionary[currentMilestion.toString()] === undefined) {
             proccessDictionary[currentMilestion.toString()] = 1;
             console.log(`-------> ${currentMilestion * 5}% completed; patch size: ${JSON.stringify(patch).length / 1000} kb; minimized patch size: ${smallifyPatch(patch).length / 1000} kb; time: ${(present() - t0) / 60000} minutes`);
