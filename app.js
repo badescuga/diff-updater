@@ -7,11 +7,14 @@ var present = require('present');
 var lpcNew = '';
 var lpcOld = '';
 
-var newLpcName = "/lpc-versions/lpc-new20.js";
-var oldLpcName = "/lpc-versions/lpc-old20.js";
+//var newLpcName = "/lpc-versions/lpc-new20.js";
+//var oldLpcName = "/lpc-versions/lpc-old20.js";
 
-// var newLpcName = '/lpc-versions/lpc-30-02.js';
-// var oldLpcName = '/lpc-versions/lpc-23-02.js';
+var newLpcName = '/lpc-versions/lpc-30-02.js';
+var oldLpcName = '/lpc-versions/lpc-23-02.js';
+
+var fileToWriteTo = '/converted/lpc-converted.txt';
+var dictionaryToWriteTo = '/converted/lpc-dic.txt';
 
 var indent = 0;
 
@@ -40,7 +43,6 @@ loadData(newLpcName).then((data) => {
         console.log("old card size: " + lpcOld.length);
         console.log("new card size: " + lpcNew.length);
         getDiffs();
-        //calculateWordWeight(lpcNew);
     }).catch(ex => {
         console.log(ex);
     });
@@ -49,7 +51,31 @@ loadData(newLpcName).then((data) => {
 });
 
 function getDiffs() {
-    patchProcess(lpcOld, lpcNew);
+    //patchProcess(lpcOld, lpcNew);
+    calculateWordWeight(lpcNew);
+}
+
+var indexSearchUniqueStrings = 0;
+function getUniqueStr(str) {
+    while (true) {
+        var pair = String.fromCharCode(48 + Math.floor(indexSearchUniqueStrings / 74), 48 + (indexSearchUniqueStrings % 74));
+
+        if (str.indexOf(pair) === -1) {
+            console.log('FOUND --- > ' + pair);
+            indexSearchUniqueStrings++;
+            return pair;
+        }
+        indexSearchUniqueStrings++;
+    }
+}
+
+function optimizeDictionary(wordDictionary) {
+    var str = "";
+    Object.keys(wordDictionary).forEach(key => {
+        str += key+","+wordDictionary[key]+",";
+    });
+
+    return str;
 }
 
 function calculateWordWeight(str) {
@@ -78,9 +104,11 @@ function calculateWordWeight(str) {
         }
 
         return 1;
-    })
+    });
 
-    var totalSaved = 0;
+    var wordDictionary = {};
+
+    //var totalSaved = 0;
     keyArray.forEach(elem => {
         if (elem.length <= 2) {
             return;
@@ -88,15 +116,37 @@ function calculateWordWeight(str) {
 
         var saved = calculateRealSave(elem, dictionary[elem]);
         if (saved > 0) {
-            totalSaved += saved;
-            console.log(`for word >>> ${elem} >>> count: ${dictionary[elem]} >>> value (2char replacement): ${calculateRealSave(elem, dictionary[elem])};`);
+            wordDictionary[elem] = getUniqueStr(str);
+            //totalSaved += saved;
+            console.log(`for word >>> ${elem} >>> count: ${dictionary[elem]} >>> saved: ${calculateRealSave(elem, dictionary[elem]) / 1000} Kb;`);
         } else {
-            console.log(`[SKIPPING] word >>> ${elem} >>> count: ${dictionary[elem]} >>> value (2char replacement): ${calculateRealSave(elem, dictionary[elem])};`);
+            // console.log(`[SKIPPING] word >>> ${elem} >>> count: ${dictionary[elem]} >>> value (2char replacement): ${calculateRealSave(elem, dictionary[elem])};`);
         }
     });
 
+    console.log("lpc size (before): " + str.length / 1000 + " Kb");
+
+    Object.keys(wordDictionary).forEach(key => {
+        str = str.replace(new RegExp(key, 'g'), wordDictionary[key]);
+    });
+
+    console.log("word dictionary size (non-optimized): " + JSON.stringify(wordDictionary).length / 1000 + " Kb");
+    console.log("word dictionary size (optimized): " + optimizeDictionary(wordDictionary).length / 1000 + " Kb");
+    console.log("lpc size: " + str.length / 1000 + " Kb");
+    writeToFile(fileToWriteTo, str);
+    writeToFile(dictionaryToWriteTo, JSON.stringify(wordDictionary));
     console.log("------------------->>>>>>>>>>");
-    console.log(`------------------->>>>>>>>>> total saved: ${totalSaved / 1000} Kb`);
+    // console.log(`------------------->>>>>>>>>> total saved: ${totalSaved / 1000} Kb`);
+}
+
+function writeToFile(filePath, str) {
+    fs.writeFile(__dirname + filePath, str, function (err) {
+        if (err) {
+            return console.log(err);
+        }
+
+        console.log("The file was saved!");
+    });
 }
 
 function calculateRealSave(element, count) {
@@ -260,7 +310,7 @@ function patchProcess(oldString, newString) {
     console.log("--- diff ------");
     console.log("----------------------------");
 
-    var diff = createPatch(oldString, newString, 3);
+    var diff = createPatch(oldString, newString, 1);
     var result = JSON.stringify(diff);
     console.log("patch size: " + result.length);
     console.log("applying patch..");
